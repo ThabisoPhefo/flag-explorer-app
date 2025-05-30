@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, Path
 from typing import List
-from .models import Country, CountryDetails, CountryListResponse
-from .services import CountryService
+from .models import Country, CountryDetails
+from .controllers import CountryController
 
 router = APIRouter()
-country_service = CountryService()
+# Initialize the controller
+country_controller = CountryController()
 
 @router.get(
     "/countries", 
@@ -27,12 +28,12 @@ country_service = CountryService()
 )
 async def get_countries():
     """
-    Retrieve all countries with basic information (name and flag).
+    HTTP route to retrieve all countries with basic information (name and flag).
     
+    This route delegates to the CountryController for business logic.
     Returns a list of countries from the REST Countries API.
     """
-    countries = await country_service.get_all_countries()
-    return countries
+    return await country_controller.get_all_countries()
 
 @router.get(
     "/countries/{name}",
@@ -48,6 +49,9 @@ async def get_countries():
                 }
             }
         },
+        400: {
+            "description": "Invalid country name"
+        },
         404: {
             "description": "Country not found"
         }
@@ -57,7 +61,9 @@ async def get_country_details(
     name: str = Path(..., description="Country name", example="france")
 ):
     """
-    Retrieve detailed information about a specific country by name.
+    HTTP route to retrieve detailed information about a specific country by name.
+    
+    This route delegates to the CountryController for business logic.
     
     Args:
         name: The name of the country to retrieve details for
@@ -65,5 +71,4 @@ async def get_country_details(
     Returns:
         Detailed information about the country including population, capital, etc.
     """
-    country_details = await country_service.get_country_by_name(name)
-    return country_details 
+    return await country_controller.get_country_details(name) 
