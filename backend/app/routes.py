@@ -1,68 +1,69 @@
-from fastapi import APIRouter, HTTPException
-import httpx
-from typing import List, Optional
-from .models import Country, CountryList
+from fastapi import APIRouter, HTTPException, Path
+from typing import List
+from .models import Country, CountryDetails, CountryListResponse
+from .services import CountryService
 
 router = APIRouter()
+country_service = CountryService()
 
-RESTCOUNTRIES_BASE_URL = "https://restcountries.com/v3.1"
-
-@router.get("/countries", response_model=CountryList)
-async def get_all_countries():
-    """Get all countries with basic information"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{RESTCOUNTRIES_BASE_URL}/all")
-            response.raise_for_status()
-            
-        countries_data = response.json()
-        countries = []
-        
-        for country_data in countries_data:
-            country = Country(
-                name=country_data.get("name", {}).get("common", "Unknown"),
-                capital=country_data.get("capital", [None])[0] if country_data.get("capital") else None,
-                population=country_data.get("population"),
-                flag=country_data.get("flags", {}).get("png"),
-                code=country_data.get("cca2", ""),
-                region=country_data.get("region"),
-                area=country_data.get("area")
-            )
-            countries.append(country)
-        
-        return CountryList(countries=countries, total=len(countries))
+@router.get(
+    "/countries", 
+    response_model=List[Country],
+    summary="Retrieve all countries",
+    description="A list of countries",
+    responses={
+        200: {
+            "description": "A list of countries",
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Country"}
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_countries():
+    """
+    Retrieve all countries with basic information (name and flag).
     
-    except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching countries: {str(e)}")
+    Returns a list of countries from the REST Countries API.
+    """
+    countries = await country_service.get_all_countries()
+    return countries
 
-@router.get("/countries/{country_name}", response_model=Country)
-async def get_country_by_name(country_name: str):
-    """Get detailed information about a specific country"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{RESTCOUNTRIES_BASE_URL}/name/{country_name}")
-            response.raise_for_status()
-        
-        countries_data = response.json()
-        
-        if not countries_data:
-            raise HTTPException(status_code=404, detail="Country not found")
-        
-        country_data = countries_data[0]  # Take the first match
-        
-        country = Country(
-            name=country_data.get("name", {}).get("common", "Unknown"),
-            capital=country_data.get("capital", [None])[0] if country_data.get("capital") else None,
-            population=country_data.get("population"),
-            flag=country_data.get("flags", {}).get("png"),
-            code=country_data.get("cca2", ""),
-            region=country_data.get("region"),
-            area=country_data.get("area")
-        )
-        
-        return country
+@router.get(
+    "/countries/{name}",
+    response_model=CountryDetails,
+    summary="Retrieve details about a specific country", 
+    description="Details about the country",
+    responses={
+        200: {
+            "description": "Details about the country",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/CountryDetails"}
+                }
+            }
+        },
+        404: {
+            "description": "Country not found"
+        }
+    }
+)
+async def get_country_details(
+    name: str = Path(..., description="Country name", example="france")
+):
+    """
+    Retrieve detailed information about a specific country by name.
     
-    except httpx.HTTPError as e:
-        if e.response.status_code == 404:
-            raise HTTPException(status_code=404, detail="Country not found")
-        raise HTTPException(status_code=500, detail=f"Error fetching country: {str(e)}") 
+    Args:
+        name: The name of the country to retrieve details for
+        
+    Returns:
+        Detailed information about the country including population, capital, etc.
+    """
+    country_details = await country_service.get_country_by_name(name)
+    return country_details 

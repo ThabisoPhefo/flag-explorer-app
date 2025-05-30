@@ -1,137 +1,54 @@
-# Flag Explorer Backend
+# Country API Backend
 
-A FastAPI-based REST API that provides country information and flag data by integrating with the RestCountries API.
+A FastAPI-based REST API for exploring country information using data from the [REST Countries API](https://restcountries.com/). This backend implements Clean Architecture patterns and provides comprehensive testing.
 
 ## Features
 
-- **Country List Endpoint**: Get all countries with basic information
-- **Country Details Endpoint**: Get detailed information about a specific country
-- **Modern Architecture**: Built with FastAPI following Clean Architecture principles
-- **CORS Support**: Configured for frontend integration
-- **Comprehensive Testing**: Unit and integration tests included
-- **API Documentation**: Automatic OpenAPI/Swagger documentation
-
-## Tech Stack
-
-- **FastAPI**: Modern, fast web framework for building APIs
-- **Pydantic**: Data validation and settings management
-- **HTTPX**: Async HTTP client for external API calls
-- **Uvicorn**: ASGI server implementation
-- **Pytest**: Testing framework
-
-## Setup and Installation
-
-### Prerequisites
-
-- Python 3.8+
-- pip
-
-### Installation
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   ```
-
-3. Activate the virtual environment:
-   ```bash
-   # On macOS/Linux
-   source venv/bin/activate
-   
-   # On Windows
-   venv\Scripts\activate
-   ```
-
-4. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-## Running the Application
-
-### Development Server
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The API will be available at:
-- API Base URL: http://localhost:8000
-- Interactive API Documentation: http://localhost:8000/docs
-- Alternative API Documentation: http://localhost:8000/redoc
+- **Modern Architecture**: Built with FastAPI using Clean Architecture principles
+- **Two Main Endpoints**: List all countries and get detailed country information
+- **External API Integration**: Fetches real-time data from REST Countries API
+- **Comprehensive Testing**: Unit and integration tests with coverage reporting
+- **Error Handling**: Robust error handling with proper HTTP status codes
+- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
 
 ## API Endpoints
 
-### Base Routes
-
-- `GET /` - Welcome message
-- `GET /health` - Health check
-
-### Country Routes
-
-- `GET /api/countries` - Get all countries
-- `GET /api/countries/{country_name}` - Get specific country details
-
-### Example Responses
-
-#### Get All Countries
-```json
-{
-  "countries": [
+### 1. Get All Countries
+- **Endpoint**: `GET /countries`
+- **Description**: Retrieve a list of all countries with basic information
+- **Response**: Array of countries with `name` and `flag` properties
+- **Example**:
+  ```json
+  [
     {
-      "name": "United States",
-      "capital": "Washington, D.C.",
-      "population": 331900000,
-      "flag": "https://flagcdn.com/w320/us.png",
-      "code": "US",
-      "region": "Americas",
-      "area": 9372610
+      "name": "France",
+      "flag": "https://flagcdn.com/w320/fr.png"
+    },
+    {
+      "name": "Germany", 
+      "flag": "https://flagcdn.com/w320/de.png"
     }
-  ],
-  "total": 250
-}
-```
+  ]
+  ```
 
-#### Get Country Details
-```json
-{
-  "name": "United States",
-  "capital": "Washington, D.C.",
-  "population": 331900000,
-  "flag": "https://flagcdn.com/w320/us.png",
-  "code": "US",
-  "region": "Americas",
-  "area": 9372610
-}
-```
-
-## Testing
-
-Run all tests:
-```bash
-pytest
-```
-
-Run tests with coverage:
-```bash
-pytest --cov=app tests/
-```
-
-Run specific test file:
-```bash
-pytest tests/test_main.py
-```
+### 2. Get Country Details
+- **Endpoint**: `GET /countries/{name}`
+- **Description**: Retrieve detailed information about a specific country
+- **Parameters**: 
+  - `name` (path): Country name (case-insensitive)
+- **Response**: Detailed country information
+- **Example**:
+  ```json
+  {
+    "name": "France",
+    "population": 67391582,
+    "capital": "Paris",
+    "flag": "https://flagcdn.com/w320/fr.png",
+    "region": "Europe",
+    "area": 551695.0,
+    "code": "FR"
+  }
+  ```
 
 ## Project Structure
 
@@ -141,30 +58,176 @@ backend/
 │   ├── __init__.py
 │   ├── main.py          # FastAPI application setup
 │   ├── models.py        # Pydantic models
-│   └── routes.py        # API routes
+│   ├── routes.py        # API endpoints
+│   └── services.py      # Business logic layer
 ├── tests/
 │   ├── __init__.py
-│   └── test_main.py     # Unit tests
-├── .env                 # Environment variables
+│   ├── test_main.py     # Integration tests
+│   └── test_services.py # Unit tests
 ├── requirements.txt     # Python dependencies
+├── run_tests.py        # Test runner script
 └── README.md           # This file
 ```
 
+## Setup and Installation
+
+### Prerequisites
+- Python 3.8+
+- pip
+
+### Installation Steps
+
+1. **Navigate to backend directory**:
+   ```bash
+   cd backend
+   ```
+
+2. **Create virtual environment** (recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Running the Application
+
+### Development Server
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Production Server
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+The API will be available at:
+- **API Base URL**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI Spec**: http://localhost:8000/openapi.json
+
+## Testing
+
+### Run All Tests
+```bash
+python run_tests.py
+```
+
+### Manual Test Commands
+```bash
+# Run tests with verbose output
+pytest tests/ -v
+
+# Run tests with coverage
+pytest tests/ --cov=app --cov-report=term-missing
+
+# Run specific test file
+pytest tests/test_services.py -v
+```
+
+### Test Coverage
+The test suite includes:
+- **Unit Tests**: Testing individual service methods
+- **Integration Tests**: Testing API endpoints
+- **Error Handling Tests**: Testing various error scenarios
+- **Edge Case Tests**: Testing boundary conditions
+
+## Architecture
+
+### Clean Architecture Implementation
+
+1. **Models** (`models.py`): Data models using Pydantic for validation
+2. **Services** (`services.py`): Business logic and external API integration
+3. **Routes** (`routes.py`): FastAPI endpoints and request/response handling
+4. **Main** (`main.py`): Application configuration and setup
+
+### Error Handling
+
+The API implements comprehensive error handling:
+- **404**: Country not found
+- **502**: External service errors
+- **504**: Service timeouts
+- **500**: Internal server errors
+
+## API Documentation
+
+### Swagger/OpenAPI
+Visit `/docs` when the server is running to access the interactive API documentation.
+
+### Sample Requests
+
+**Get all countries:**
+```bash
+curl http://localhost:8000/countries
+```
+
+**Get specific country:**
+```bash
+curl http://localhost:8000/countries/france
+```
+
+**Test API health:**
+```bash
+curl http://localhost:8000/health
+```
+
+## Development
+
+### Code Quality
+- Follow PEP 8 style guidelines
+- Use type hints
+- Write comprehensive tests
+- Document functions and classes
+
+### Adding New Features
+1. Create models in `models.py`
+2. Implement business logic in `services.py`
+3. Add endpoints in `routes.py`
+4. Write tests for all new functionality
+
+## Dependencies
+
+- **FastAPI**: Modern web framework for APIs
+- **Uvicorn**: ASGI server
+- **Pydantic**: Data validation and settings management
+- **HTTPX**: Async HTTP client for external API calls
+- **pytest**: Testing framework
+- **pytest-asyncio**: Async test support
+- **pytest-cov**: Coverage reporting
+
+## External API
+
+This backend integrates with [REST Countries API](https://restcountries.com/):
+- **Base URL**: https://restcountries.com/v3.1
+- **All Countries**: `/all`
+- **Country by Name**: `/name/{name}?fullText=true`
+
 ## Environment Variables
 
-- `ENVIRONMENT`: Application environment (development/production)
-- `API_HOST`: Host to bind the server to
-- `API_PORT`: Port to bind the server to
+Create a `.env` file for configuration:
+```env
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+LOG_LEVEL=INFO
 
-## External APIs
-
-This application integrates with:
-- **RestCountries API**: https://restcountries.com/v3.1/
-  - Used to fetch country information and flag URLs
+# External API
+COUNTRIES_API_TIMEOUT=30
+```
 
 ## Contributing
 
-1. Follow PEP 8 style guidelines
-2. Write tests for new features
-3. Update documentation as needed
-4. Ensure all tests pass before submitting 
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
+
+## License
+
+This project is part of the Flag Explorer application. 
