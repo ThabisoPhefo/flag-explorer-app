@@ -28,9 +28,16 @@ class CountryService:
                     # Extract basic country information as per Swagger spec
                     name = country_data.get("name", {}).get("common", "Unknown")
                     flag = country_data.get("flags", {}).get("png", "")
+                    population = country_data.get("population", 0)
+                    region = country_data.get("region")
                     
                     if name != "Unknown" and flag:  # Only include countries with valid data
-                        country = Country(name=name, flag=flag)
+                        country = Country(
+                            name=name, 
+                            flag=flag,
+                            population=population,
+                            region=region
+                        )
                         countries.append(country)
                 except Exception as e:
                     logger.warning(f"Error processing country data: {e}")
@@ -98,6 +105,9 @@ class CountryService:
                 raise HTTPException(status_code=404, detail=f"Country '{country_name}' not found")
             logger.error(f"HTTP error while fetching country {country_name}: {e}")
             raise HTTPException(status_code=502, detail="Error fetching country details from external service")
+        except HTTPException:
+            # Re-raise HTTPExceptions without modification
+            raise
         except Exception as e:
             logger.error(f"Unexpected error while fetching country {country_name}: {e}")
             raise HTTPException(status_code=500, detail="Internal server error") 

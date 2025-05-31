@@ -5,6 +5,8 @@ class Country(BaseModel):
     """Basic country information for the countries list"""
     name: str
     flag: str
+    population: int
+    region: Optional[str] = None
 
 class CountryDetails(BaseModel):
     """Detailed country information for individual country queries"""
