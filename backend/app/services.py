@@ -28,9 +28,16 @@ class CountryService:
                     # Extract basic country information as per Swagger spec
                     name = country_data.get("name", {}).get("common", "Unknown")
                     flag = country_data.get("flags", {}).get("png", "")
+                    population = country_data.get("population", 0)
+                    region = country_data.get("region")
                     
                     if name != "Unknown" and flag:  # Only include countries with valid data
-                        country = Country(name=name, flag=flag)
+                        country = Country(
+                            name=name, 
+                            flag=flag,
+                            population=population,
+                            region=region
+                        )
                         countries.append(country)
                 except Exception as e:
                     logger.warning(f"Error processing country data: {e}")

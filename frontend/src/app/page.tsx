@@ -6,11 +6,14 @@ import Image from 'next/image';
 import { getAllCountries, checkApiHealth } from '@/lib/api';
 import { Country } from '@/types/country';
 
+type FilterType = 'a-z' | 'z-a' | 'population-asc' | 'population-desc' | 'region';
+
 export default function Home() {
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('a-z');
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -43,9 +46,68 @@ export default function Home() {
     initializeApp();
   }, []);
 
-  const filteredCountries = countries.filter(country =>
-    country.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and sort countries based on search term and filter type
+  const getFilteredAndSortedCountries = () => {
+    let filtered = countries.filter(country => 
+      country.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    switch (filterType) {
+      case 'a-z':
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      case 'z-a':
+        return filtered.sort((a, b) => b.name.localeCompare(a.name));
+      case 'population-asc':
+        return filtered.sort((a, b) => a.population - b.population);
+      case 'population-desc':
+        return filtered.sort((a, b) => b.population - a.population);
+      case 'region':
+        return filtered.sort((a, b) => {
+          const regionA = a.region || 'Unknown';
+          const regionB = b.region || 'Unknown';
+          if (regionA === regionB) {
+            return a.name.localeCompare(b.name);
+          }
+          return regionA.localeCompare(regionB);
+        });
+      default:
+        return filtered;
+    }
+  };
+
+  // Group countries by region for region filter
+  const getCountriesByRegion = () => {
+    const filteredCountries = getFilteredAndSortedCountries();
+    const grouped = filteredCountries.reduce((acc, country) => {
+      const region = country.region || 'Unknown';
+      if (!acc[region]) {
+        acc[region] = [];
+      }
+      acc[region].push(country);
+      return acc;
+    }, {} as Record<string, Country[]>);
+
+    // Sort regions alphabetically and sort countries within each region
+    const sortedRegions = Object.keys(grouped).sort();
+    const result: Record<string, Country[]> = {};
+    sortedRegions.forEach(region => {
+      result[region] = grouped[region].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
+    return result;
+  };
+
+  const formatPopulation = (population: number) => {
+    if (population >= 1000000) {
+      return `${(population / 1000000).toFixed(1)}M`;
+    } else if (population >= 1000) {
+      return `${(population / 1000).toFixed(0)}K`;
+    }
+    return population.toString();
+  };
+
+  const filteredCountries = getFilteredAndSortedCountries();
+  const countriesByRegion = filterType === 'region' ? getCountriesByRegion() : {};
 
   if (loading) {
     return (
@@ -110,54 +172,81 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Bar */}
+        {/* Search and Filter Bar */}
         <div className="mb-8">
-          <div className="relative max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-400">🔍</span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            <div className="relative max-w-md flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="text-gray-400">🔍</span>
+              </div>
+              <input
+                type="text"
+                placeholder="Search countries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search countries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-            />
+            
+            <div className="flex items-center gap-4">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as FilterType)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white min-w-[180px]"
+              >
+                <option value="a-z">🔤 A-Z (Name)</option>
+                <option value="z-a">🔤 Z-A (Name)</option>
+                <option value="population-desc">👥 Population (High-Low)</option>
+                <option value="population-asc">👥 Population (Low-High)</option>
+                <option value="region">🌍 Group by Region</option>
+              </select>
+            </div>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Found {filteredCountries.length} countries
-          </p>
+          
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              Found {filterType === 'region' ? Object.values(countriesByRegion).flat().length : filteredCountries.length} countries 
+              {searchTerm && ` matching "${searchTerm}"`}
+            </p>
+            {filterType === 'region' && (
+              <p className="text-sm text-blue-600 font-medium">
+                📍 {Object.keys(countriesByRegion).length} regions
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Countries Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-          {filteredCountries.map((country) => (
-            <Link
-              key={country.name}
-              href={`/country/${encodeURIComponent(country.name)}`}
-              className="group block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
-            >
-              <div className="aspect-[3/2] relative overflow-hidden rounded-t-lg bg-gray-100">
-                <Image
-                  src={country.flag}
-                  alt={`Flag of ${country.name}`}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-300"
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 16vw, 12vw"
-                  loading="lazy"
-                />
+        {/* Countries Display */}
+        {filterType === 'region' ? (
+          // Region-grouped display
+          <div className="space-y-8">
+            {Object.entries(countriesByRegion).map(([region, regionCountries]) => (
+              <div key={region}>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">{region}</h2>
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                    {regionCountries.length} countries
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+                  {regionCountries.map((country) => (
+                    <CountryCard key={country.name} country={country} showPopulation={filterType.includes('population')} />
+                  ))}
+                </div>
               </div>
-              <div className="p-3">
-                <h3 className="text-sm font-medium text-gray-900 truncate" title={country.name}>
-                  {country.name}
-                </h3>
-              </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          // Regular grid display
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            {filteredCountries.map((country) => (
+              <CountryCard key={country.name} country={country} showPopulation={filterType.includes('population')} />
+            ))}
+          </div>
+        )}
 
         {/* No Results */}
-        {filteredCountries.length === 0 && searchTerm && (
+        {(filterType === 'region' ? Object.values(countriesByRegion).flat().length === 0 : filteredCountries.length === 0) && searchTerm && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No countries found</h3>
@@ -184,5 +273,50 @@ export default function Home() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Country Card Component
+function CountryCard({ country, showPopulation }: { country: Country; showPopulation: boolean }) {
+  const formatPopulation = (population: number) => {
+    if (population >= 1000000) {
+      return `${(population / 1000000).toFixed(1)}M`;
+    } else if (population >= 1000) {
+      return `${(population / 1000).toFixed(0)}K`;
+    }
+    return population.toString();
+  };
+
+  return (
+    <Link
+      href={`/country/${encodeURIComponent(country.name)}`}
+      className="group block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+    >
+      <div className="aspect-[3/2] relative overflow-hidden rounded-t-lg bg-gray-100">
+        <Image
+          src={country.flag}
+          alt={`Flag of ${country.name}`}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-300"
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 16vw, 12vw"
+          loading="lazy"
+        />
+      </div>
+      <div className="p-3">
+        <h3 className="text-sm font-medium text-gray-900 truncate" title={country.name}>
+          {country.name}
+        </h3>
+        {showPopulation && (
+          <p className="text-xs text-gray-500 mt-1">
+            👥 {formatPopulation(country.population)}
+          </p>
+        )}
+        {country.region && (
+          <p className="text-xs text-blue-600 mt-1 truncate">
+            📍 {country.region}
+          </p>
+        )}
+      </div>
+    </Link>
   );
 }
