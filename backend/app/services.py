@@ -102,6 +102,9 @@ class CountryService:
                 raise HTTPException(status_code=404, detail=f"Country '{country_name}' not found")
             logger.error(f"HTTP error while fetching country {country_name}: {e}")
             raise HTTPException(status_code=502, detail="Error fetching country details from external service")
+        except HTTPException:
+            # Re-raise HTTPExceptions without modification
+            raise
         except Exception as e:
             logger.error(f"Unexpected error while fetching country {country_name}: {e}")
             raise HTTPException(status_code=500, detail="Internal server error") 
