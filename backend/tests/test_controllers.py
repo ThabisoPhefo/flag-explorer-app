@@ -16,8 +16,8 @@ class TestCountryController:
     async def test_get_all_countries_success(self, country_controller):
         """Test successful retrieval of all countries via controller"""
         mock_countries = [
-            Country(name="France", flag="https://flagcdn.com/w320/fr.png"),
-            Country(name="Germany", flag="https://flagcdn.com/w320/de.png")
+            Country(name="France", flag="https://flagcdn.com/w320/fr.png", population=67391582),
+            Country(name="Germany", flag="https://flagcdn.com/w320/de.png", population=83240525)
         ]
         
         with patch.object(country_controller.country_service, 'get_all_countries', new_callable=AsyncMock) as mock_service:
