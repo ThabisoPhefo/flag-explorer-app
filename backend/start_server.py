@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 Simple server startup script for the Country API.
-This script can be run directly without installing dependencies globally.
+This script can be run directly to start the FastAPI server.
 """
 
 import sys
 import subprocess
 import os
+import uvicorn
 
 def start_server():
     """Start the FastAPI server"""
@@ -17,25 +18,29 @@ def start_server():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     
     try:
-        print("📋 To install dependencies in a virtual environment:")
-        print("   python3 -m venv venv")
-        print("   source venv/bin/activate")
-        print("   pip install -r requirements.txt")
+        print("🌐 Starting server on http://127.0.0.1:8001")
+        print("📚 API Documentation: http://127.0.0.1:8001/docs")
+        print("🔍 Health Check: http://127.0.0.1:8001/health")
         print("")
-        print("📋 To run the server:")
-        print("   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000")
-        print("")
-        print("📋 The API will be available at:")
-        print("   • API: http://localhost:8000")
-        print("   • Docs: http://localhost:8000/docs")
-        print("   • Health: http://localhost:8000/health")
-        print("")
-        print("📋 Example API calls:")
-        print("   curl http://localhost:8000/countries")
-        print("   curl http://localhost:8000/countries/france")
+        print("Press Ctrl+C to stop the server")
+        print("=" * 40)
+        
+        # Start the uvicorn server
+        uvicorn.run(
+            "app.main:app", 
+            host="127.0.0.1", 
+            port=8001, 
+            reload=True,
+            log_level="info"
+        )
         
     except KeyboardInterrupt:
-        print("\n⚠️  Startup interrupted by user")
+        print("\n⚠️  Server stopped by user")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Error starting server: {e}")
+        print("\n📋 Manual start instructions:")
+        print("   uvicorn app.main:app --reload --host 127.0.0.1 --port 8001")
         sys.exit(1)
 
 if __name__ == "__main__":
