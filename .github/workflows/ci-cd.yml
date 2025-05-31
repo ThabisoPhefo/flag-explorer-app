@@ -103,17 +103,29 @@ jobs:
       run: |
         echo "Checking frontend build output..."
         ls -la frontend/
-        ls -la frontend/.next/ || echo ".next directory not found"
-        ls -la frontend/public/ || echo "public directory not found"
+        if [ ! -d "frontend/.next" ]; then
+          echo "Error: .next directory not found!"
+          exit 1
+        fi
+        if [ ! -d "frontend/public" ]; then
+          echo "Error: public directory not found!"
+          exit 1
+        fi
+        echo "✅ Build directories found successfully"
+        echo "Contents of .next directory:"
+        ls -la frontend/.next/
+        echo "Contents of public directory:"
+        ls -la frontend/public/
         
     - name: Upload frontend build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-build
         path: |
           frontend/.next
           frontend/public
         retention-days: 7
+        if-no-files-found: error
 
   # Build Backend
   build-backend:
@@ -149,14 +161,21 @@ jobs:
       run: |
         echo "Checking backend package..."
         ls -la backend/
-        ls -la backend/dist/ || echo "dist directory not found"
+        if [ ! -d "backend/dist" ]; then
+          echo "Error: dist directory not found!"
+          exit 1
+        fi
+        echo "✅ Backend package created successfully"
+        echo "Contents of dist directory:"
+        ls -la backend/dist/
         
     - name: Upload backend build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: backend-build
         path: backend/dist
         retention-days: 7
+        if-no-files-found: error
 
   # Package for Deployment
   package-deployment:
@@ -170,16 +189,24 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Download frontend artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: frontend-build
         path: deployment/frontend/
         
     - name: Download backend artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: backend-build
         path: deployment/backend/
+        
+    - name: Verify downloaded artifacts
+      run: |
+        echo "Checking downloaded artifacts..."
+        echo "Frontend artifacts:"
+        ls -la deployment/frontend/ || echo "No frontend artifacts found"
+        echo "Backend artifacts:"
+        ls -la deployment/backend/ || echo "No backend artifacts found"
         
     - name: Create deployment package
       run: |
@@ -187,10 +214,22 @@ jobs:
         mkdir -p deployment-package
         
         # Copy frontend build
-        cp -r deployment/frontend/ deployment-package/frontend/
+        if [ -d "deployment/frontend" ]; then
+          cp -r deployment/frontend/ deployment-package/frontend/
+          echo "✅ Frontend artifacts copied"
+        else
+          echo "❌ Frontend artifacts not found"
+          exit 1
+        fi
         
         # Copy backend build
-        cp -r deployment/backend/ deployment-package/backend/
+        if [ -d "deployment/backend" ]; then
+          cp -r deployment/backend/ deployment-package/backend/
+          echo "✅ Backend artifacts copied"
+        else
+          echo "❌ Backend artifacts not found"
+          exit 1
+        fi
         
         # Create deployment scripts
         cat > deployment-package/deploy.sh << 'EOF'
@@ -283,11 +322,12 @@ jobs:
         ls -la deployment-package/ || echo "deployment-package directory not found"
         
     - name: Upload deployment package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: ${{ env.ARCHIVE_NAME }}
         retention-days: 30
+        if-no-files-found: error
 
   # Integration Tests (Optional - runs after both services are built)
   integration-tests:
