@@ -1,5 +1,7 @@
 # Flag Explorer App
 
+![CI/CD Pipeline](https://github.com/YOUR_USERNAME/flag-explorer-app/workflows/CI/CD%20Pipeline/badge.svg)
+
 A full-stack web application that allows users to explore countries and their flags from around the world. The application features a modern, responsive interface with detailed country information and beautiful flag displays.
 
 ## 🌟 Features
@@ -17,6 +19,13 @@ A full-stack web application that allows users to explore countries and their fl
 - **Modern Architecture**: Built following Clean Architecture principles
 - **Comprehensive Testing**: Unit and integration tests
 - **API Documentation**: Automatic OpenAPI/Swagger documentation
+
+### CI/CD Pipeline ⚡
+- **Automated Testing**: Both frontend and backend tests run on every push/PR
+- **Build Verification**: Ensures application builds successfully
+- **Deployment Packaging**: Automatic creation of deployment packages
+- **Integration Tests**: End-to-end testing of frontend and backend integration
+- **Coverage Reports**: Code coverage tracking for both components
 
 ## 🏗️ Architecture
 
