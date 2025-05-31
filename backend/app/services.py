@@ -94,6 +94,9 @@ class CountryService:
             
             return country_details
             
+        except HTTPException:
+            # Re-raise HTTPExceptions (like 404) without modification
+            raise
         except httpx.TimeoutException:
             logger.error(f"Timeout while fetching country: {country_name}")
             raise HTTPException(status_code=504, detail="Service timeout while fetching country details")

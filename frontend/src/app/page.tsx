@@ -48,7 +48,7 @@ export default function Home() {
 
   // Filter and sort countries based on search term and filter type
   const getFilteredAndSortedCountries = () => {
-    let filtered = countries.filter(country => 
+    const filtered = countries.filter(country => 
       country.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -95,15 +95,6 @@ export default function Home() {
     });
     
     return result;
-  };
-
-  const formatPopulation = (population: number) => {
-    if (population >= 1000000) {
-      return `${(population / 1000000).toFixed(1)}M`;
-    } else if (population >= 1000) {
-      return `${(population / 1000).toFixed(0)}K`;
-    }
-    return population.toString();
   };
 
   const filteredCountries = getFilteredAndSortedCountries();

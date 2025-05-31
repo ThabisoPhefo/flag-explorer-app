@@ -1,4 +1,4 @@
-import { Country, CountryDetails, CountryList } from '@/types/country';
+import { Country, CountryDetails } from '@/types/country';
 
 // Backend API base URL - using the port where our backend is running
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8001';
