@@ -56,29 +56,21 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          
-    - name: Install backend dependencies
+    - name: Install dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run backend tests with coverage
+    - name: Run tests with coverage
       working-directory: ./backend
       run: |
-        python -m pytest --cov=app --cov-report=xml --cov-report=html
+        python3 -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
         
-    - name: Upload backend test coverage
+    - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
-        files: ./backend/coverage.xml
+        file: ./backend/coverage.xml
         flags: backend
         name: backend-coverage
 
@@ -107,13 +99,20 @@ jobs:
       working-directory: ./frontend
       run: npm run build
       
+    - name: Verify build output
+      run: |
+        echo "Checking frontend build output..."
+        ls -la frontend/
+        ls -la frontend/.next/ || echo ".next directory not found"
+        ls -la frontend/public/ || echo "public directory not found"
+        
     - name: Upload frontend build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: frontend-build
         path: |
-          frontend/.next/
-          frontend/public/
+          frontend/.next
+          frontend/public
         retention-days: 7
 
   # Build Backend
@@ -134,7 +133,7 @@ jobs:
     - name: Install dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
         pip install -r requirements.txt
         
     - name: Create backend package
@@ -146,11 +145,17 @@ jobs:
         cp requirements.txt dist/
         cp start_server.py dist/
         
+    - name: Verify backend package
+      run: |
+        echo "Checking backend package..."
+        ls -la backend/
+        ls -la backend/dist/ || echo "dist directory not found"
+        
     - name: Upload backend build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: backend-build
-        path: backend/dist/
+        path: backend/dist
         retention-days: 7
 
   # Package for Deployment
@@ -197,11 +202,11 @@ jobs:
         # Install backend dependencies
         echo "📦 Installing backend dependencies..."
         cd backend
-        python -m pip install -r requirements.txt
+        python3 -m pip install -r requirements.txt
         
         # Start backend server
         echo "🔧 Starting backend server..."
-        python start_server.py &
+        python3 start_server.py &
         BACKEND_PID=$!
         
         # Wait for backend to be ready
@@ -250,7 +255,7 @@ jobs:
         ```bash
         cd backend
         pip install -r requirements.txt
-        python start_server.py
+        python3 start_server.py
         ```
         
         ### Frontend
@@ -267,13 +272,21 @@ jobs:
         EOF
         
         # Create archive
-        tar -czf flag-explorer-deployment-$(date +%Y%m%d-%H%M%S).tar.gz deployment-package/
+        ARCHIVE_NAME="flag-explorer-deployment-$(date +%Y%m%d-%H%M%S).tar.gz"
+        tar -czf "$ARCHIVE_NAME" deployment-package/
+        echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
+        
+    - name: Verify deployment package
+      run: |
+        echo "Checking deployment package..."
+        ls -la *.tar.gz || echo "No tar.gz files found"
+        ls -la deployment-package/ || echo "deployment-package directory not found"
         
     - name: Upload deployment package
       uses: actions/upload-artifact@v3
       with:
         name: deployment-package
-        path: flag-explorer-deployment-*.tar.gz
+        path: ${{ env.ARCHIVE_NAME }}
         retention-days: 30
 
   # Integration Tests (Optional - runs after both services are built)
@@ -300,7 +313,7 @@ jobs:
     - name: Install backend dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip
         pip install -r requirements.txt
         
     - name: Install frontend dependencies
@@ -310,8 +323,8 @@ jobs:
     - name: Start backend server
       working-directory: ./backend
       run: |
-        python start_server.py &
-        echo $! > backend.pid
+        python3 start_server.py &
+        echo $! > ../backend.pid
         # Wait for server to start
         sleep 10
         
