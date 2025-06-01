@@ -81,14 +81,17 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Start the backend server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Start the backend server (Option 1 - Using start script)
+python start_server.py
+
+# OR Start the backend server (Option 2 - Direct uvicorn command)
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 The backend API will be available at:
-- **API Base**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
+- **API Base**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
+- **Health Check**: http://localhost:8001/health
 
 ### 3. Frontend Setup
 
@@ -107,6 +110,26 @@ npm run dev
 
 The frontend will be available at: http://localhost:3000
 
+### Alternative: Docker Setup
+
+For a containerized setup using Docker:
+
+```bash
+# Build and start all services
+docker-compose up --build
+
+# Run in detached mode (background)
+docker-compose up -d --build
+
+# Stop all services
+docker-compose down
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
+
 ## 🧪 Testing
 
 ### Backend Tests
@@ -114,6 +137,11 @@ The frontend will be available at: http://localhost:3000
 ```bash
 cd backend
 source venv/bin/activate  # Activate virtual environment
+
+# Option 1: Using test runner script (with HTML coverage report)
+python run_tests.py
+
+# Option 2: Direct pytest command
 pytest                    # Run all tests
 pytest --cov=app tests/   # Run with coverage
 ```
@@ -124,6 +152,7 @@ pytest --cov=app tests/   # Run with coverage
 cd frontend
 npm test                  # Run all tests
 npm run test:watch        # Run in watch mode
+npm test -- --ci --coverage --watchAll=false  # CI mode with coverage
 ```
 
 ## 📚 API Documentation
@@ -132,8 +161,8 @@ npm run test:watch        # Run in watch mode
 
 - `GET /` - Welcome message
 - `GET /health` - Health check
-- `GET /api/countries` - Get all countries
-- `GET /api/countries/{country_name}` - Get specific country details
+- `GET /countries` - Get all countries
+- `GET /countries/{name}` - Get specific country details
 
 ### Example API Response
 
@@ -161,7 +190,12 @@ npm run test:watch        # Run in watch mode
 ```bash
 cd backend
 source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Option 1: Using start script (recommended)
+python start_server.py
+
+# Option 2: Direct uvicorn command
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 ### Frontend Development
@@ -176,13 +210,13 @@ npm run dev
 #### Backend (.env)
 ```env
 ENVIRONMENT=development
-API_HOST=0.0.0.0
-API_PORT=8000
+API_HOST=127.0.0.1
+API_PORT=8001
 ```
 
 #### Frontend (.env.local)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
 
 ## 🏭 Production Deployment
@@ -192,7 +226,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8001
 ```
 
 ### Frontend Production
@@ -263,12 +297,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Common Issues
 
 1. **Backend not starting**: Ensure Python virtual environment is activated and dependencies are installed
-2. **Frontend not connecting to backend**: Check that backend is running on port 8000 and CORS is configured
+2. **Frontend not connecting to backend**: Check that backend is running on port 8001 and CORS is configured
 3. **API calls failing**: Verify internet connection for external API calls to RestCountries
 4. **Tests failing**: Ensure all dependencies are installed and environment is properly set up
 
 ### Getting Help
 
 - Check the individual README files in `backend/` and `frontend/` directories
-- Review the API documentation at http://localhost:8000/docs
+- Review the API documentation at http://localhost:8001/docs
 - Ensure all prerequisites are installed and up to date 
