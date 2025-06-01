@@ -1,6 +1,6 @@
 # Flag Explorer App
 
-![CI/CD Pipeline](https://github.com/YOUR_USERNAME/flag-explorer-app/workflows/CI/CD%20Pipeline/badge.svg)
+A full-stack web application for exploring countries and their flags. Built with Next.js frontend and FastAPI backend.
 
 A full-stack web application that allows users to explore countries and their flags from around the world. The application features a modern, responsive interface with detailed country information and beautiful flag displays.
 
@@ -51,20 +51,17 @@ FlagExplorerApp/
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - **Backend**: Python 3.8+, pip
 - **Frontend**: Node.js 18.0+, npm
-- **Optional**: Git for version control
+- **Docker**: Optional for containerized setup
 
-### 1. Clone the Repository
-
+### 1. Clone Repository
 ```bash
 git clone <repository-url>
 cd flag-explorer-app
 ```
 
 ### 2. Backend Setup
-
 ```bash
 # Navigate to backend directory
 cd backend
@@ -81,11 +78,9 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Start the backend server (Option 1 - Using start script)
-python start_server.py
-
-# OR Start the backend server (Option 2 - Direct uvicorn command)
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+# Start backend (choose one):
+python start_server.py                                    # Option 1 (recommended)
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8001  # Option 2
 ```
 
 The backend API will be available at:
@@ -108,12 +103,7 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at: http://localhost:3000
-
-### Alternative: Docker Setup
-
-For a containerized setup using Docker:
-
+### 4. Docker Setup (Alternative)
 ```bash
 # Build and start all services
 docker-compose up --build
@@ -133,7 +123,6 @@ The application will be available at:
 ## 🧪 Testing
 
 ### Backend Tests
-
 ```bash
 cd backend
 source venv/bin/activate  # Activate virtual environment
@@ -147,7 +136,6 @@ pytest --cov=app tests/   # Run with coverage
 ```
 
 ### Frontend Tests
-
 ```bash
 cd frontend
 npm test                  # Run all tests
@@ -189,13 +177,8 @@ npm test -- --ci --coverage --watchAll=false  # CI mode with coverage
 
 ```bash
 cd backend
-source venv/bin/activate
-
-# Option 1: Using start script (recommended)
-python start_server.py
-
-# Option 2: Direct uvicorn command
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8001
 ```
 
 ### Frontend Development
@@ -205,16 +188,16 @@ cd frontend
 npm run dev
 ```
 
-### Environment Variables
+## 🔧 Environment Variables
 
-#### Backend (.env)
+### Backend (.env)
 ```env
 ENVIRONMENT=development
 API_HOST=127.0.0.1
 API_PORT=8001
 ```
 
-#### Frontend (.env.local)
+### Frontend (.env.local)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
